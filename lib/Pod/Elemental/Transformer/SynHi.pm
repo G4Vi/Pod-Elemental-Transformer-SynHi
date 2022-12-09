@@ -225,6 +225,103 @@ sub standard_code_block {
 
   my @lines = split m{<br(?:\s*/)>|\n}, $html;
 
+  # http://www.formauri.es/personal/pgimeno/temp/numbering-code-demo.html
+  my $css = <<'END_CSS';
+<style type="text/css">
+
+/* Bare bones style for the desired effect */
+pre.code {
+    display: table;
+    table-layout: fixed;
+    width: 100%; /* anything but auto, otherwise fixed layout not guaranteed */
+    white-space: pre-wrap;
+}
+pre.code::before {
+    counter-reset: linenum;
+}
+pre.code span.tr {
+    display: table-row;
+    counter-increment: linenum;
+}
+pre.code span.th { /* used for line numbers */
+    display: table-cell;
+    user-select: none;
+    -moz-user-select: none;
+    -webkit-user-select: none;
+}
+pre.code span.th::before {
+    content: counter(linenum);
+    text-align: right;
+    display: block;
+}
+
+pre.code code {
+    display: table-cell;
+}
+
+/* Additional styling demo */
+pre.code {
+    border: solid 1px black;
+    /*width: 400px;
+    margin: 80px auto;*/
+}
+pre.code span.th {
+    background: #880000;
+    padding: 3px;
+    padding-top: 0px;
+    border-right: solid 1px silver;
+    /*border-top: solid 1px silver;*/
+    width: 3.5em;
+}
+/*
+pre.code span.th::before {
+    font-size: 90%;
+    color: #999;
+}
+*/
+pre.code span.tr.first-row span.th {
+    border-top: none;
+}
+pre.code code {
+    padding: 3px;
+}
+
+pre.code span.th::before {
+    content: counter(linenum) ":";
+}
+
+pre.code > span > code > span.keyword   { color: #89f !important; }
+pre.code > span > code > span.symbol    { color: #0cc !important; }
+pre.code > span > code > span.operator  { color: #fff !important; }
+pre.code > span > code > span.structure { color: #bf0 !important; }
+pre.code > span > code > span.word      { color: #dd8 !important; }
+pre.code > span > code > span.comment   { color: #0f0 !important; }
+pre.code > span > code > span.pod       { color: #0f0 !important; }
+pre.code > span > code > span.match     { color: #ff0 !important; }
+pre.code > span > code > span.readline  { color: #caa !important; }
+pre.code > span > code > span.single,
+pre.code > span > code > span.double    { color: #0cf !important; }
+
+pre.code  {
+    padding-top: 0em;
+    padding-bottom: 0em;
+}
+
+</style>
+END_CSS
+
+  my $temphtml = '<pre class="code">';
+  my $spanclass = "tr first-row";
+  foreach my $line (@lines) {
+    $temphtml .= '<span class="'.$spanclass.'"><span class="th"></span><code>';
+    $temphtml .= $line;
+    $temphtml .= '</code></span>';
+    $spanclass = "tr";
+  }
+  $temphtml .= '</pre>';
+  $html = $css . $temphtml;
+  return $html;
+
   # The leading nbsp below, in generating $code, is to try to get indentation
   # to appear in feed readers, which to not respect white-space:pre or the pre
   # element. The use of <br> instead of newlines is for the same reason.
